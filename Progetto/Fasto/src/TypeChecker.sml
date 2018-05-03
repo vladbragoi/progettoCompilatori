@@ -116,10 +116,16 @@ and checkExp ftab vtab (exp : In.Exp)
          end
 
     | In.And (e1, e2, pos)
-      => raise Fail "Unimplemented feature &&"
+      => let val (_, e1_dec, e2_dec) = checkBinOp ftab vtab (pos, Bool, e1, e2)
+         in (Bool,
+             Out.And (e1_dec, e2_dec, pos))
+         end
 
     | In.Or (e1, e2, pos)
-      => raise Fail "Unimplemented feature ||"
+     => let val (_, e1_dec, e2_dec) = checkBinOp ftab vtab (pos, Bool, e1, e2)
+         in (Bool,
+             Out.Or (e1_dec, e2_dec, pos))
+         end
 
     | In.Not (e, pos)
       => raise Fail "Unimplemented feature not"

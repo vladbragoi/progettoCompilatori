@@ -169,14 +169,39 @@ fun evalExp ( Constant (v,_), vtab, ftab ) = v
               | (IntVal n1, IntVal n2) => IntVal (Int.quot(n1, n2))
               | _ => invalidOperands "Divide on non-integer args" [(Int, Int)] res1 res2 pos 
         end
+
   | evalExp (And (e1, e2, pos), vtab, ftab) =
-    raise Fail "Unimplemented feature &&"    
+        let val res1 = evalExp(e1, vtab, ftab)
+        in  case res1 of 
+              BoolVal false => res1
+              | BoolVal true => let val res2 = evalExp(e2, vtab, ftab) in
+                  case res2 of
+                    BoolVal _ => res2
+                    | _ => invalidOperand "And on non-boolean arg" Bool res2 pos
+                  end
+              | _ => invalidOperand "And on non-boolean arg" Bool res1 pos    
+        end
+            
 
   | evalExp (Or (e1, e2, pos), vtab, ftab) =
-    raise Fail "Unimplemented feature ||"
+        let val res1 = evalExp(e1, vtab, ftab)
+        in  case res1 of 
+              BoolVal true => res1
+              | BoolVal false => let val res2 = evalExp(e2, vtab, ftab) in
+                  case res2 of
+                    BoolVal _ => res2
+                    | _ => invalidOperand "Or on non-boolean arg" Bool res2 pos
+                  end
+              | _ => invalidOperand "Or on non-boolean arg" Bool res1 pos    
+        end
 
   | evalExp ( Not(e, pos), vtab, ftab ) =
-    raise Fail "Unimplemented feature not"
+        let val res = evalExp(e, vtab, ftab)
+        in case res of
+          BoolVal true => BoolVal false
+          | BoolVal false => BoolVal true
+          | _ => invalidOperand "Not on non-boolean arg" Bool res pos
+        end 
 
   | evalExp ( Negate(e, pos), vtab, ftab ) =
     raise Fail "Unimplemented feature negate"
