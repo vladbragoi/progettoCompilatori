@@ -184,10 +184,25 @@ fun evalExp ( Constant (v,_), vtab, ftab ) = v
         end
 
   | evalExp (Or (e1, e2, pos), vtab, ftab) =
-    raise Fail "Unimplemented feature ||"
+        let val r1 = evalExp(e1, vtab, ftab)
+        in case r1 of 
+              BoolVal true => r1
+            | BoolVal false => 
+                let val r2 = evalExp(e2, vtab, ftab)
+                in case r2 of
+                    BoolVal _ => r2
+                  | _ => invalidOperand "Non boolean expressions: " Bool r2 pos
+                end
+            | _ => invalidOperand "Non boolean expressions: " Bool r1 pos
+        end
 
   | evalExp ( Not(e, pos), vtab, ftab ) =
-    raise Fail "Unimplemented feature not"
+        let val r = evalExp(e, vtab, ftab)
+        in case r of
+              BoolVal true => BoolVal false
+            | BoolVal false => BoolVal true
+            | _ => invalidOperand "Non boolean expression: " Bool r pos
+        end
 
   | evalExp ( Negate(e, pos), vtab, ftab ) =
     raise Fail "Unimplemented feature negate"
