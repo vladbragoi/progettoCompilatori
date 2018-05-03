@@ -32,11 +32,20 @@ fun copyConstPropFoldExp vtable e =
         let val e' = copyConstPropFoldExp vtable e
         in case e' of
                Var (varname, _) =>
-               raise Fail "Cannot copy-propagate Var yet"
+               let val vtable' = SymTab.bind name (VarProp varname) vtable
+                   val body' = copyConstPropFoldExp vtable' body
+               in Let (Dec (name, e', decpos), body', pos)
+               end
              | Constant (value, _) =>
-               raise Fail "Cannot copy-propagate Constant yet"
+               let val vtable' = SymTab.bind name (ConstProp value) vtable
+                   val body' = copyConstPropFoldExp vtable' body
+               in Let (Dec (name, e', decpos), body', pos)
+               end
              | Let (Dec bindee, inner_body, inner_pos) =>
-               raise Fail "Cannot copy-propagate Let yet"
+               copyConstPropFoldExp vtable
+                                    (Let (Dec bindee,
+                                          Let (Dec (name, inner_body, inner_pos), body, decpos),
+                                          pos))
              | _ => (* Fallthrough - for everything else, do nothing *)
                let val body' = copyConstPropFoldExp vtable body
                in Let (Dec (name, e', decpos), body', pos)
@@ -45,12 +54,18 @@ fun copyConstPropFoldExp vtable e =
       | Times (e1, e2, pos) =>
         let val e1' = copyConstPropFoldExp vtable e1
             val e2' = copyConstPropFoldExp vtable e2
-        in Times (e1', e2', pos) (* Do something here. *)
+        in case (e1', e2') of
+               (Constant (IntVal x, _), Constant (IntVal y, _)) =>
+                 Constant (IntVal (x*y), pos)
+             | _ => Times (e1', e2', pos)
         end
       | And (e1, e2, pos) =>
         let val e1' = copyConstPropFoldExp vtable e1
             val e2' = copyConstPropFoldExp vtable e2
-        in And (e1', e2', pos) (* Do something here. *)
+        in case (e1', e2') of
+               (Constant (BoolVal a, _), Constant (BoolVal b, _)) =>
+               Constant (BoolVal (a andalso b), pos)
+             | _ => And (e1', e2', pos)
         end
       | Constant x => Constant x
       | StringLit x => StringLit x
@@ -175,3 +190,4 @@ fun copyConstPropFoldFunDec (FunDec (fname, rettype, params, body, loc)) =
 fun optimiseProgram prog =
     map copyConstPropFoldFunDec prog
 end
+

@@ -111,7 +111,7 @@ and checkExp ftab vtab (exp : In.Exp)
 
     | In.Divide (e1, e2, pos)
       => let val (_, e1_dec, e2_dec) = checkBinOp ftab vtab (pos, Int, e1, e2)
-         in (Int,
+         in (Int, 
              Out.Divide (e1_dec, e2_dec, pos))
          end
 
@@ -204,12 +204,35 @@ and checkExp ftab vtab (exp : In.Exp)
                                   ": not an array", pos)
          in (arr_type, Out.Index (s, i_exp_dec, arr_type, pos))
          end
-
+(*   
     | In.Iota (n_exp, pos)
-      => raise Fail "Unimplemented feature iota"
-               
+      => let val (e_type, n_exp_dec) = checkExp ftab vtab n_exp
+        in if e_type = Int 
+            then (Array Int, Out.Iota (n_exp_dec, pos))
+            else raise Error ("Iota: wrong argument type " ^ 
+                                    ppType e_type, pos)
+        end
+
+                 
     | In.Map (f, arr_exp, _, _, pos)
-      => raise Fail "Unimplemented feature map"
+      => let val (arr_type, arr_exp_dec) = checkExp ftab vtab arr_exp
+            val elem_type =
+                case arr_type of
+                      Array t => t
+                    | other => raise Error ("Map: Argument not an array", pos)
+            val (f', f_res_type, f_arg_type) = 
+                case checkFunArg (f, vtab, ftab, pos) of 
+                      (f', res, [a1]) => (f', res, a1)
+                    | (_, res, args) => 
+                        raise Error("Map. incompatible function type of"
+                                ^ In.ppFunArg 0 f ^ ":" ^ showFunType(args, res), pos)
+                        in if elem_type = f_arg_type
+                            then (Array f_res_type,
+                                Out.Map (f', array_exp_dec, elem_type, f_res_type, pos))
+                            else raise Error ("Map: array element types does not match."
+                                        ^ ppType elem_type ^ " instead of " ^ ppType f_arg_type, pos)
+                end
+    *)
                
     | In.Reduce (f, n_exp, arr_exp, _, pos)
       => raise Fail "Unimplemented feature reduce"

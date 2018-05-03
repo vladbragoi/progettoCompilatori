@@ -159,23 +159,29 @@ fun evalExp ( Constant (v,_), vtab, ftab ) = v
         in  case (res1, res2) of
               (IntVal n1, IntVal n2) => IntVal (n1*n2)
             | _ => invalidOperands "Multiplication on non-integral args: " [(Int, Int)] res1 res2 pos
-        end            
+        end
 
   | evalExp ( Divide(e1, e2, pos), vtab, ftab ) =
         let val res1    = evalExp(e1, vtab, ftab)
             val res2    = evalExp(e2, vtab, ftab)
-        if (res2 == 0)
-            raise Fail "Division by 0"
-        else 
-            case (res1, res2) of
-                (IntVal n1, IntVal n2) => IntVal (n1/n2)
-              | _ => invalidOperands "Division on non-integral args: " [(Int, Int)] res1 res2 pos
-
-                
-    raise Fail "Unimplemented feature division"    
+        in case (res1, res2) of
+              (_, IntVal 0) => raise Error ("Division by 0", pos)
+            | (IntVal n1, IntVal n2) => IntVal (Int.quot(n1, n2))
+            | _ => invalidOperands "Division on non-integral args: " [(Int, Int)] res1 res2 pos
+        end
 
   | evalExp (And (e1, e2, pos), vtab, ftab) =
-    raise Fail "Unimplemented feature &&"    
+        let val r1 = evalExp(e1, vtab, ftab)
+        in case r1 of
+              BoolVal false => r1
+            | BoolVal true =>
+                let val r2 = evalExp(e2, vtab, ftab)
+                in case r2 of
+                    BoolVal _ => r2
+                  | _ => invalidOperand "Non boolean expressions: " Bool r2 pos
+                end
+            | _ => invalidOperand "Non boolean expressions: " Bool r1 pos
+        end
 
   | evalExp (Or (e1, e2, pos), vtab, ftab) =
     raise Fail "Unimplemented feature ||"

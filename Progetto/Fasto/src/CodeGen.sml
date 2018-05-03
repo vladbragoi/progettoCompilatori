@@ -161,10 +161,12 @@ fun compileExp e vtable place =
       else
         [ Mips.LUI (place, makeConst (n div 65536))
         , Mips.ORI (place, place, makeConst (n mod 65536)) ]
+  | Constant (BoolVal p, pos) =>
+      if   p
+      then [Mips.LI (place, makeConst 1)] (* 1 for true *)
+      else [Mips.LI (place, makeConst 0)] (* 0 for false *)
   | Constant (CharVal c, pos) => [ Mips.LI (place, makeConst (ord c)) ]
 
-  | Constant (BoolVal b, pos) => raise Fail "Unimplemented feature boolean constants"
-  
   (* Create/return a label here, collect all string literals of the program
      (in stringTable), and create them in the data section before the heap
      (Mips.ASCIIZ) *)
@@ -230,16 +232,29 @@ fun compileExp e vtable place =
           val code2 = compileExp e2 vtable t2
       in  code1 @ code2 @ [Mips.SUB (place,t1,t2)]
       end
-
   | Times (e1, e2, pos) =>
-    raise Fail "Unimplemented feature multiplication"
+      let val t1 = newName "mult1_L"
+          val t2 = newName "mult2_R"
+          val code1 = compileExp e1 vtable t1
+          val code2 = compileExp e2 vtable t2
+      in  code1 @ code2 @
+          [Mips.MUL (place,t1,t2)]
+      end
   | Divide (e1, e2, pos) =>
-    raise Fail "Unimplemented feature division"
+      let val t1 = newName "div1_L"
+          val t2 = newName "div2_R"
+          val code1 = compileExp e1 vtable t1
+          val code2 = compileExp e2 vtable t2
+      in  code1 @ code2 @
+          [Mips.DIV (place,t1,t2)]
+      end
   | Not (e', pos) =>
-    raise Fail "Unimplemented feature not"
+      let val code = compileExp e' vtable place
+      in code @ [ Mips.XORI (place, place, "1") ] end
   | Negate (e', pos) =>
-    raise Fail "Unimplemented feature negate"
-
+      let val code = compileExp e' vtable place
+      in code @ [Mips.SUB (place, "0", place)]
+      end
   | Let (dec, e1, pos) =>
       let val (code1, vtable1) = compileDec dec vtable
           val code2 = compileExp e1 vtable1 place
@@ -379,11 +394,38 @@ fun compileExp e vtable place =
       in  code1 @ code2 @
           [Mips.SLT (place,t1,t2)]
       end
-
   | And (e1, e2, pos) =>
-    raise Fail "Unimplemented feature &&"
+      let val t1 = newName "and_L"
+          val t2 = newName "and_R"
+          val falseLabel = newName "falseLabel"
+          val endLabel = newName "endLabel"
+          val code1 = compileExp e1 vtable t1
+          val code2 = compileExp e2 vtable t2
+      in  code1
+          @ [ Mips.BEQ (t1, "0", falseLabel) ]
+          @ code2
+          @ [ Mips.MOVE (place, t2)
+            , Mips.J endLabel
+            , Mips.LABEL falseLabel
+            , Mips.MOVE (place, "0")
+            , Mips.LABEL endLabel]
+      end
   | Or (e1, e2, pos) =>
-    raise Fail "Unimplemented feature ||"
+      let val t1 = newName "or_L"
+          val t2 = newName "or_R"
+          val trueLabel = newName "trueLabel"
+          val endLabel = newName "endLabel"
+          val code1 = compileExp e1 vtable t1
+          val code2 = compileExp e2 vtable t2
+      in  code1
+          @ [ Mips.BNE (t1, "0", trueLabel) ]
+          @ code2
+          @ [ Mips.MOVE (place, t2)
+            , Mips.J endLabel
+            , Mips.LABEL trueLabel
+            , Mips.MOVE (place, "1")
+            , Mips.LABEL endLabel ]
+      end
 
   (* Indexing:
      1. generate code to compute the index
@@ -423,14 +465,163 @@ fun compileExp e vtable place =
      iota, map, reduce
   *)
   | Iota (n_exp, pos as (line, _)) =>
-    raise Fail "Unimplemented feature iota"
+      let val size_reg = newName "size_reg"
+          val n_code = compileExp n_exp vtable size_reg
+          (* size_reg is now the integer n. *)
+
+          (* Check that array size N >= 0:
+             if N - 1 >= 0 then jumpto safe_lab
+             jumpto "_IllegalArrSizeError_"
+             safe_lab: ...
+          *)
+          val safe_lab = newName "safe_lab"
+          val checksize = [ Mips.ADDI (size_reg, size_reg, "-1")
+                          , Mips.BGEZ (size_reg, safe_lab)
+                          , Mips.LI ("5", makeConst line)
+                          , Mips.J "_IllegalArrSizeError_"
+                          , Mips.LABEL (safe_lab)
+                          , Mips.ADDI (size_reg, size_reg, "1")
+                          ]
+
+          val addr_reg = newName "addr_reg"
+          val i_reg = newName "i_reg"
+          val init_regs = [ Mips.ADDI (addr_reg, place, "4")
+                          , Mips.MOVE (i_reg, "0") ]
+          (* addr_reg is now the position of the first array element. *)
+
+          (* Run a loop.  Keep jumping back to loop_beg until it is not the
+             case that i_reg < size_reg, and then jump to loop_end. *)
+          val loop_beg = newName "loop_beg"
+          val loop_end = newName "loop_end"
+          val tmp_reg = newName "tmp_reg"
+          val loop_header = [ Mips.LABEL (loop_beg)
+                            , Mips.SUB (tmp_reg, i_reg, size_reg)
+                            , Mips.BGEZ (tmp_reg, loop_end) ]
+
+          (* iota is just 'arr[i] = i'.  arr[i] is addr_reg. *)
+          val loop_iota = [ Mips.SW (i_reg, addr_reg, "0") ]
+
+          val loop_footer = [ Mips.ADDI (addr_reg, addr_reg, "4")
+                            , Mips.ADDI (i_reg, i_reg, "1")
+                            , Mips.J loop_beg
+                            , Mips.LABEL loop_end
+                            ]
+      in n_code
+         @ checksize
+         @ dynalloc (size_reg, place, Int)
+         @ init_regs
+         @ loop_header
+         @ loop_iota
+         @ loop_footer
+      end
 
   | Map (farg, arr_exp, elem_type, ret_type, pos) =>
-    raise Fail "Unimplemented feature map"
+      let val size_reg = newName "size_reg" (* size of input/output array *)
+          val arr_reg  = newName "arr_reg" (* address of array *)
+          val elem_reg = newName "elem_reg" (* address of single element *)
+          val res_reg = newName "res_reg"
+          val arr_code = compileExp arr_exp vtable arr_reg
+
+          val get_size = [ Mips.LW (size_reg, arr_reg, "0") ]
+
+          val addr_reg = newName "addr_reg" (* address of element in new array *)
+          val i_reg = newName "i_reg"
+          val init_regs = [ Mips.ADDI (addr_reg, place, "4")
+                          , Mips.MOVE (i_reg, "0")
+                          , Mips.ADDI (elem_reg, arr_reg, "4") ]
+
+          val loop_beg = newName "loop_beg"
+          val loop_end = newName "loop_end"
+          val tmp_reg = newName "tmp_reg"
+          val loop_header = [ Mips.LABEL (loop_beg)
+                            , Mips.SUB (tmp_reg, i_reg, size_reg)
+                            , Mips.BGEZ (tmp_reg, loop_end) ]
+
+          (* map is 'arr[i] = f(old_arr[i])'. *)
+          val loop_map0 =
+              case getElemSize elem_type of
+                  One => Mips.LB(res_reg, elem_reg, "0")
+                         :: applyFunArg(farg, [res_reg], vtable, res_reg, pos)
+                         @ [ Mips.ADDI(elem_reg, elem_reg, "1") ]
+                | Four => Mips.LW(res_reg, elem_reg, "0")
+                          :: applyFunArg(farg, [res_reg], vtable, res_reg, pos)
+                          @ [ Mips.ADDI(elem_reg, elem_reg, "4") ]
+          val loop_map1 =
+              case getElemSize ret_type of
+                  One => [ Mips.SB (res_reg, addr_reg, "0") ]
+                | Four => [ Mips.SW (res_reg, addr_reg, "0") ]
+
+          val loop_footer =
+              [ Mips.ADDI (addr_reg, addr_reg,
+                           makeConst (elemSizeToInt (getElemSize ret_type)))
+              , Mips.ADDI (i_reg, i_reg, "1")
+              , Mips.J loop_beg
+              , Mips.LABEL loop_end
+              ]
+      in arr_code
+         @ get_size
+         @ dynalloc (size_reg, place, ret_type)
+         @ init_regs
+         @ loop_header
+         @ loop_map0
+         @ loop_map1
+         @ loop_footer
+      end
 
   (* reduce(f, acc, {x1, x2, ...}) = f(..., f(x2, f(x1, acc))) *)
   | Reduce (binop, acc_exp, arr_exp, tp, pos) =>
-    raise Fail "Unimplemented feature reduce"
+      let val arr_reg  = newName "arr_reg"   (* address of array *)
+          val size_reg = newName "size_reg"  (* size of input array *)
+          val i_reg    = newName "ind_var"   (* loop counter *)
+          val tmp_reg  = newName "tmp_reg"   (* several purposes *)
+          val loop_beg = newName "loop_beg"
+          val loop_end = newName "loop_end"
+
+          val arr_code = compileExp arr_exp vtable arr_reg
+          val header1 = [ Mips.LW(size_reg, arr_reg, "0") ]
+
+          (* Compile initial value into place (will be updated below) *)
+          val acc_code = compileExp acc_exp vtable place
+
+          (* Set arr_reg to address of first element instead. *)
+          (* Set i_reg to 0. While i < size_reg, loop. *)
+          val loop_code =
+              [ Mips.ADDI(arr_reg, arr_reg, "4")
+              , Mips.MOVE(i_reg, "0")
+              , Mips.LABEL(loop_beg)
+              , Mips.SUB(tmp_reg, i_reg, size_reg)
+              , Mips.BGEZ(tmp_reg, loop_end) ]
+
+          (* Load arr[i] into tmp_reg *)
+          val load_code =
+              case getElemSize tp of
+                  One =>  [ Mips.LB   (tmp_reg, arr_reg, "0")
+                          , Mips.ADDI (arr_reg, arr_reg, "1") ]
+                | Four => [ Mips.LW   (tmp_reg, arr_reg, "0")
+                          , Mips.ADDI (arr_reg, arr_reg, "4") ]
+
+          (* place := binop(tmp_reg, place) *)
+          val apply_code =
+              applyFunArg(binop, [place, tmp_reg], vtable, place, pos)
+
+      in arr_code @ header1 @ acc_code @ loop_code @ load_code @ apply_code @
+         [ Mips.ADDI(i_reg, i_reg, "1")
+         , Mips.J loop_beg
+         , Mips.LABEL loop_end ]
+      end
+
+and applyFunArg (FunName s, args, vtable, place, pos) : Mips.Prog =
+    let val tmp_reg = newName "tmp_reg"
+    in  applyRegs(s, args, tmp_reg, pos) @ [Mips.MOVE(place, tmp_reg)] end
+  | applyFunArg (Lambda (_, params, body, lampos), args, vtable, place, pos) =
+    let fun bindParams (Param (pname,_)::params') (arg::args') vtable' =
+            bindParams params' args' (SymTab.bind pname arg vtable')
+          | bindParams _ _ vtable' = vtable'
+        val vtable' = bindParams params args vtable
+        val t = newName "fun_arg_res"
+    in compileExp body vtable' t @
+       [ Mips.MOVE(place, t) ]
+    end
 
 (* compile condition *)
 and compileCond c vtable tlab flab =
@@ -639,3 +830,4 @@ fun compile funs =
         Mips.SPACE "100000"]
   end
 end
+
