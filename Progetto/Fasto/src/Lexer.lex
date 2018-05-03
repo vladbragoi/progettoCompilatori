@@ -37,6 +37,9 @@
        | "bool"         => Parser.BOOL pos
        | "char"         => Parser.CHAR pos
        | "fun"          => Parser.FUN pos
+       (*My adds*)
+       | "true"         => Parser.TRUE pos
+       | "false"        => Parser.FALSE pos
 
 (* specials: *)
        | "read"         => Parser.READ pos
@@ -71,6 +74,8 @@ rule Token = parse
 			     | SOME s => String.substring(s,1,
 							  String.size s - 2)),
 			     getPos lexbuf) }
+  | `*`                 { Parser.TIMES  (getPos lexbuf) }
+  | `/`                 { Parser.DIVIDE (getPos lexbuf) }
   | `+`                 { Parser.PLUS   (getPos lexbuf) }
   | `-`                 { Parser.MINUS  (getPos lexbuf) }
   | "=="                { Parser.DEQ    (getPos lexbuf) }
