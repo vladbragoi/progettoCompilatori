@@ -116,16 +116,32 @@ and checkExp ftab vtab (exp : In.Exp)
          end
 
     | In.And (e1, e2, pos)
-      => raise Fail "Unimplemented feature &&"
+      => let val (_, e1_dec, e2_dec) = checkBinOp ftab vtab (pos, Bool, e1, e2)
+         in (Bool,
+             Out.And (e1_dec, e2_dec, pos))
+         end
 
     | In.Or (e1, e2, pos)
-      => raise Fail "Unimplemented feature ||"
+      => let val (_, e1_dec, e2_dec) = checkBinOp ftab vtab (pos, Bool, e1, e2)
+         in (Bool,
+             Out.Or (e1_dec, e2_dec, pos))
+         end
 
     | In.Not (e, pos)
-      => raise Fail "Unimplemented feature not"
+      => let val (t, e_dec) = checkExp ftab vtab e
+         in case (t, e_dec) of 
+              (Bool, _) => (Bool,
+                            Out.Not (e_dec, pos))
+            | _ => raise Error ("Cannot apply not operator to non boolean expression", pos)
+         end
 
     | In.Negate (e, pos)
-      => raise Fail "Unimplemented feature negate"
+      => let val (t, e_dec) = checkExp ftab vtab e
+         in case (t, e_dec) of 
+              (Int, _) => (Int,
+                        Out.Negate (e_dec, pos))
+            | _ => raise Error ("Cannot negate non integer expression", pos)
+         end
 
     (* The types for e1, e2 must be the same. The result is always a Bool. *)
     | In.Equal (e1, e2, pos)
