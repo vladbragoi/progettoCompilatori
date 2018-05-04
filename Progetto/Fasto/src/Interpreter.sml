@@ -204,7 +204,11 @@ fun evalExp ( Constant (v,_), vtab, ftab ) = v
         end 
 
   | evalExp ( Negate(e, pos), vtab, ftab ) =
-    raise Fail "Unimplemented feature negate"
+        let val res = evalExp(e, vtab, ftab)
+        in case res of
+          IntVal n => IntVal (0 - n)
+          | _ => invalidOperand "Negate on non-integer arg" Int res pos
+        end
 
   | evalExp ( Equal(e1, e2, pos), vtab, ftab ) =
         let val r1 = evalExp(e1, vtab, ftab)

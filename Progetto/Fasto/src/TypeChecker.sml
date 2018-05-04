@@ -128,10 +128,20 @@ and checkExp ftab vtab (exp : In.Exp)
          end
 
     | In.Not (e, pos)
-      => raise Fail "Unimplemented feature not"
+      => let val (t, e_dec) = checkExp ftab vtab e
+          in case t of
+                Bool => (Bool,
+                        Out.Not (e_dec, pos))
+                | _ => raise Error ("Cannot negate a non-boolean arg", pos)
+          end
 
     | In.Negate (e, pos)
-      => raise Fail "Unimplemented feature negate"
+      => let val (t, e_dec) = checkExp ftab vtab e
+          in case t of
+                Int => (Int,
+                        Out.Negate (e_dec, pos))
+                | _ => raise Error ("Cannot negate a non-integer arg", pos)
+          end
 
     (* The types for e1, e2 must be the same. The result is always a Bool. *)
     | In.Equal (e1, e2, pos)

@@ -22,18 +22,19 @@ type t__20__ = (int*int)
 type t__21__ = (int*int)
 type t__22__ = (int*int)
 type t__23__ = (int*int)
-type t__24__ = int*(int*int)
-type t__25__ = (int*int)
+type t__24__ = (int*int)
+type t__25__ = int*(int*int)
 type t__26__ = (int*int)
 type t__27__ = (int*int)
 type t__28__ = (int*int)
 type t__29__ = (int*int)
 type t__30__ = (int*int)
-type t__31__ = string*(int*int)
-type t__32__ = (int*int)
+type t__31__ = (int*int)
+type t__32__ = string*(int*int)
 type t__33__ = (int*int)
 type t__34__ = (int*int)
 type t__35__ = (int*int)
+type t__36__ = (int*int)
 in
 datatype token =
     AND of t__1__
@@ -58,19 +59,20 @@ datatype token =
   | LPAR of t__20__
   | LTH of t__21__
   | MINUS of t__22__
-  | NOT of t__23__
-  | NUM of t__24__
-  | OR of t__25__
-  | PLUS of t__26__
-  | RBRACKET of t__27__
-  | RCURLY of t__28__
-  | READ of t__29__
-  | RPAR of t__30__
-  | STRINGLIT of t__31__
-  | THEN of t__32__
-  | TIMES of t__33__
-  | TRUE of t__34__
-  | WRITE of t__35__
+  | NEGATE of t__23__
+  | NOT of t__24__
+  | NUM of t__25__
+  | OR of t__26__
+  | PLUS of t__27__
+  | RBRACKET of t__28__
+  | RCURLY of t__29__
+  | READ of t__30__
+  | RPAR of t__31__
+  | STRINGLIT of t__32__
+  | THEN of t__33__
+  | TIMES of t__34__
+  | TRUE of t__35__
+  | WRITE of t__36__
 end;
 
 val Prog :
