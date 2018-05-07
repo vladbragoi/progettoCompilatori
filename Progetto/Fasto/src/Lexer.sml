@@ -43,6 +43,7 @@ local open Obj Lexing in
        | "true"         => Parser.TRUE pos
        | "false"        => Parser.FALSE pos
        | "not"          => Parser.NOT pos
+       | "iota"         => Parser.IOTA pos
 
 (* specials: *)
        | "read"         => Parser.READ pos

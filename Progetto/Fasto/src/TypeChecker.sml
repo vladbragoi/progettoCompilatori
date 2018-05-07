@@ -222,7 +222,11 @@ and checkExp ftab vtab (exp : In.Exp)
          end
 
     | In.Iota (n_exp, pos)
-      => raise Fail "Unimplemented feature iota"
+      => let val (e_type, i_exp_dec) = checkExp ftab vtab n_exp
+         in case e_type of
+            Int => (Array Int, Out.Iota (i_exp_dec, pos))
+            | _ => raise Error ("Iota on non integer value", pos)
+         end
                
     | In.Map (f, arr_exp, _, _, pos)
       => raise Fail "Unimplemented feature map"

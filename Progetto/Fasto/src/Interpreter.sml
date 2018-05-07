@@ -110,6 +110,9 @@ fun bindParams ([], [], fid, pd, pc) = SymTab.empty()
         end
 
 
+fun myIota(1) = [IntVal 0]
+    | myIota(n) = myIota(n-1) @ [IntVal (n-1)];
+
 (* Interpreter for Fasto expressions:
     1. vtab holds bindings between variable names and
        their interpreted value (Fasto.Value).
@@ -270,7 +273,14 @@ fun evalExp ( Constant (v,_), vtab, ftab ) = v
         end
 
   | evalExp ( Iota (e, pos), vtab, ftab ) =
-    raise Fail "Unimplemented feature iota"
+        let val value = evalExp(e, vtab, ftab)
+        in case value of
+            IntVal n => 
+              if n >= 0 then ArrayVal ((myIota n), Int)
+              else raise Error("Error: In iota call, size is negative: "
+                                 ^ Int.toString(n), pos)
+            | _ => raise Error("Iota argument is not a number: "^ppVal 0 value, pos)
+        end
 
   | evalExp ( Map (farg, arrexp, _, _, pos), vtab, ftab ) =
     raise Fail "Unimplemented feature map"

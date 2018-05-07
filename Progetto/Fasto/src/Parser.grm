@@ -19,6 +19,7 @@ open Fasto.UnknownTypes
 %token <(int*int)> TRUE FALSE
 %token <(int*int)> TIMES DIVIDE
 %token <(int*int)> AND OR NOT NEGATE
+%token <(int*int)> IOTA
 
 
 %nonassoc ifprec letprec
@@ -92,6 +93,8 @@ Exp :     NUM            { Constant (IntVal (#1 $1), #2 $1) }
                         { Read ($3, $1) }
         | WRITE LPAR Exp RPAR
                         { Write ($3, (), $1) }
+        | IOTA LPAR Exp RPAR
+                        { Iota ($3, $1) }
 
         | LPAR Exp RPAR { $2 }
         | LET ID EQ Exp IN Exp %prec letprec
