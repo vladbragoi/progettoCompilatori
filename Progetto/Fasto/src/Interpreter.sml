@@ -283,7 +283,15 @@ fun evalExp ( Constant (v,_), vtab, ftab ) = v
         end
 
   | evalExp ( Map (farg, arrexp, _, _, pos), vtab, ftab ) =
-    raise Fail "Unimplemented feature map"
+        let val array = evalExp(arrexp, vtab, ftab)
+            val ftype = rtpFunArg(farg, ftab, pos)
+          in case array of
+              ArrayVal (list, t) => 
+                  let val out = map(fn x => evalFunArg(farg, vtab, ftab, pos, [x])) list
+                  in ArrayVal (out, ftype)
+                  end
+            | _ => raise Error("Non array argument:"^ppVal 0 array, pos)
+        end
 
   | evalExp ( Reduce (farg, ne, arrexp, tp, pos), vtab, ftab ) =
     raise Fail "Unimplemented feature reduce"
@@ -354,7 +362,7 @@ and evalFunArg (FunName fid, vtab, ftab, callpos, aargs) =
         NONE   => raise Error("Call to known function "^fid, callpos)
       | SOME f => callFunWithVtable(f, aargs, SymTab.empty(), ftab, callpos)
     end
-  | evalFunArg (Lambda (rettype, params, body, fpos), vtab, ftab, callpos, aargs) =
+    | evalFunArg (Lambda (rettype, params, body, fpos), vtab, ftab, callpos, aargs) =
     callFunWithVtable ( FunDec ("<anonymous>", rettype, params, body, fpos)
                       , aargs, vtab, ftab, callpos )
 

@@ -43,6 +43,8 @@
        
 
 (* specials: *)
+       | "op"           => Parser.OP pos
+       | "fn"           => Parser.FN pos
        | "iota"         => Parser.IOTA pos
        | "map"          => Parser.MAP pos
        | "reduce"       => Parser.REDUCE pos
@@ -78,6 +80,7 @@ rule Token = parse
 			     | SOME s => String.substring(s,1,
 							  String.size s - 2)),
 			     getPos lexbuf) }
+  | "=>"                { Parser.ARROW  (getPos lexbuf) }
   | `~`                 { Parser.NEGATE (getPos lexbuf) }
   | "&&"                { Parser.AND    (getPos lexbuf) }
   | "||"                { Parser.OR     (getPos lexbuf) }   
