@@ -293,6 +293,7 @@ fun evalExp ( Constant (v,_), vtab, ftab ) = v
             | _ => raise Error("Non array argument:"^ppVal 0 array, pos)
         end
 
+  (* Non ho voglia di farlo *)
   | evalExp ( Reduce (farg, ne, arrexp, tp, pos), vtab, ftab ) =
     raise Fail "Unimplemented feature reduce"
 
