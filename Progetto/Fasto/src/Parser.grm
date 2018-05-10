@@ -23,6 +23,8 @@ open Fasto.UnknownTypes
 %token <(int*int)> TRUE FALSE 
 %token <(int*int)> TIMES DIVIDE 
 %token <(int*int)> AND OR NOT NEGATE
+%token <(int*int)> IOTA
+%token <(int*int)> MAP
 
 %nonassoc ifprec letprec
 %left OR
@@ -102,6 +104,8 @@ Exp :     NUM            { Constant (IntVal (#1 $1), #2 $1) }
                         { Let (Dec (#1 $2, $4, $3), $6, $1) }
         | ID LBRACKET Exp RBRACKET
                         { Index (#1 $1, $3, (), $2) }
+        | IOTA LPAR Exp RPAR 
+                        { Iota ($3, $1) }
 ;
 
 Exps : Exp COMMA Exps   { $1 :: $3 }

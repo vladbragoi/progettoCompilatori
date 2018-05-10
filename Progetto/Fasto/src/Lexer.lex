@@ -43,6 +43,9 @@
        
 
 (* specials: *)
+       | "iota"         => Parser.IOTA pos
+       | "map"          => Parser.MAP pos
+       | "reduce"       => Parser.REDUCE pos
        | "read"         => Parser.READ pos
        | "write"        => Parser.WRITE pos
        | _              => Parser.ID (s, pos)

@@ -129,16 +129,16 @@ and checkExp ftab vtab (exp : In.Exp)
 
     | In.Not (e, pos)
       => let val (t, e_dec) = checkExp ftab vtab e
-         in case (t, e_dec) of 
-              (Bool, _) => (Bool,
+         in case t of 
+              Bool => (Bool,
                             Out.Not (e_dec, pos))
             | _ => raise Error ("Cannot apply not operator to non boolean expression", pos)
          end
 
     | In.Negate (e, pos)
       => let val (t, e_dec) = checkExp ftab vtab e
-         in case (t, e_dec) of 
-              (Int, _) => (Int,
+         in case t of 
+              Int => (Int,
                         Out.Negate (e_dec, pos))
             | _ => raise Error ("Cannot negate non integer expression", pos)
          end
@@ -222,7 +222,12 @@ and checkExp ftab vtab (exp : In.Exp)
          end
 
     | In.Iota (n_exp, pos)
-      => raise Fail "Unimplemented feature iota"
+      => let val (t, n_exp_dec) = checkExp ftab vtab n_exp
+         in case t of 
+              Int => (Array Int,
+                        Out.Iota (n_exp_dec, pos))
+            | _ => raise Error ("Iota parameter should be an expression of type int", pos)
+         end
                
     | In.Map (f, arr_exp, _, _, pos)
       => raise Fail "Unimplemented feature map"
