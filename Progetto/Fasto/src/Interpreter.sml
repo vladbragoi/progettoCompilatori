@@ -283,7 +283,12 @@ fun evalExp ( Constant (v,_), vtab, ftab ) = v
         end
 
   | evalExp ( Map (farg, arrexp, _, _, pos), vtab, ftab ) =
-    raise Fail "Unimplemented feature map"
+        let val value = evalExp(arrexp, vtab, ftab)
+            val functionReturnType = rtpFunArg(farg, ftab, pos)
+        in  case value of
+            ArrayVal (myList, listType) => ArrayVal( map (fn x => evalFunArg(farg, vtab, ftab, pos, [x])) myList , functionReturnType)
+            | _ => raise Error("Map works only on list", pos)
+        end
 
   | evalExp ( Reduce (farg, ne, arrexp, tp, pos), vtab, ftab ) =
     raise Fail "Unimplemented feature reduce"

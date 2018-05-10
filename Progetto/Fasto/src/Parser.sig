@@ -11,8 +11,8 @@ type t__9__ = (int*int)
 type t__10__ = (int*int)
 type t__11__ = (int*int)
 type t__12__ = (int*int)
-type t__13__ = string*(int*int)
-type t__14__ = (int*int)
+type t__13__ = (int*int)
+type t__14__ = string*(int*int)
 type t__15__ = (int*int)
 type t__16__ = (int*int)
 type t__17__ = (int*int)
@@ -24,18 +24,21 @@ type t__22__ = (int*int)
 type t__23__ = (int*int)
 type t__24__ = (int*int)
 type t__25__ = (int*int)
-type t__26__ = int*(int*int)
+type t__26__ = (int*int)
 type t__27__ = (int*int)
 type t__28__ = (int*int)
-type t__29__ = (int*int)
+type t__29__ = int*(int*int)
 type t__30__ = (int*int)
 type t__31__ = (int*int)
 type t__32__ = (int*int)
-type t__33__ = string*(int*int)
+type t__33__ = (int*int)
 type t__34__ = (int*int)
 type t__35__ = (int*int)
-type t__36__ = (int*int)
+type t__36__ = string*(int*int)
 type t__37__ = (int*int)
+type t__38__ = (int*int)
+type t__39__ = (int*int)
+type t__40__ = (int*int)
 in
 datatype token =
     AND of t__1__
@@ -49,32 +52,35 @@ datatype token =
   | EOF of t__9__
   | EQ of t__10__
   | FALSE of t__11__
-  | FUN of t__12__
-  | ID of t__13__
-  | IF of t__14__
-  | IN of t__15__
-  | INT of t__16__
-  | IOTA of t__17__
-  | LBRACKET of t__18__
-  | LCURLY of t__19__
-  | LET of t__20__
-  | LPAR of t__21__
-  | LTH of t__22__
-  | MINUS of t__23__
-  | NEGATE of t__24__
-  | NOT of t__25__
-  | NUM of t__26__
-  | OR of t__27__
-  | PLUS of t__28__
-  | RBRACKET of t__29__
-  | RCURLY of t__30__
-  | READ of t__31__
-  | RPAR of t__32__
-  | STRINGLIT of t__33__
-  | THEN of t__34__
-  | TIMES of t__35__
-  | TRUE of t__36__
-  | WRITE of t__37__
+  | FN of t__12__
+  | FUN of t__13__
+  | ID of t__14__
+  | IF of t__15__
+  | IMPL of t__16__
+  | IN of t__17__
+  | INT of t__18__
+  | IOTA of t__19__
+  | LBRACKET of t__20__
+  | LCURLY of t__21__
+  | LET of t__22__
+  | LPAR of t__23__
+  | LTH of t__24__
+  | MAP of t__25__
+  | MINUS of t__26__
+  | NEGATE of t__27__
+  | NOT of t__28__
+  | NUM of t__29__
+  | OR of t__30__
+  | PLUS of t__31__
+  | RBRACKET of t__32__
+  | RCURLY of t__33__
+  | READ of t__34__
+  | RPAR of t__35__
+  | STRINGLIT of t__36__
+  | THEN of t__37__
+  | TIMES of t__38__
+  | TRUE of t__39__
+  | WRITE of t__40__
 end;
 
 val Prog :

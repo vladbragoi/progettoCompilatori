@@ -19,7 +19,7 @@ open Fasto.UnknownTypes
 %token <(int*int)> TRUE FALSE
 %token <(int*int)> TIMES DIVIDE
 %token <(int*int)> AND OR NOT NEGATE
-%token <(int*int)> IOTA
+%token <(int*int)> IOTA MAP FN IMPL
 
 
 %nonassoc ifprec letprec
@@ -37,6 +37,7 @@ open Fasto.UnknownTypes
 %type <Fasto.Param list> Params
 %type <Fasto.UnknownTypes.Exp> Exp
 %type <Fasto.UnknownTypes.Exp list> Exps
+%type <Fasto.UnknownTypes.FunArg> FunArg
 
 %%
 
@@ -95,7 +96,8 @@ Exp :     NUM            { Constant (IntVal (#1 $1), #2 $1) }
                         { Write ($3, (), $1) }
         | IOTA LPAR Exp RPAR
                         { Iota ($3, $1) }
-
+        | MAP LPAR FunArg COMMA Exp RPAR
+                        { Map ( $3, $5, (), (), $1 ) }
         | LPAR Exp RPAR { $2 }
         | LET ID EQ Exp IN Exp %prec letprec
                         { Let (Dec (#1 $2, $4, $3), $6, $1) }
@@ -105,4 +107,8 @@ Exp :     NUM            { Constant (IntVal (#1 $1), #2 $1) }
 
 Exps : Exp COMMA Exps   { $1 :: $3 }
     |  Exp              { $1 :: [] }
+;
+
+FunArg : ID             { FunName ( #1 $1 ) }
+        | FN Type LPAR Params RPAR IMPL Exp { Lambda ( $2, $4, $7, $1 ) }
 ;

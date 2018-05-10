@@ -42,6 +42,8 @@
        | "false"        => Parser.FALSE pos
        | "not"          => Parser.NOT pos
        | "iota"         => Parser.IOTA pos
+       | "map"          => Parser.MAP pos
+       | "fn"           => Parser.FN pos
 
 (* specials: *)
        | "read"         => Parser.READ pos
@@ -88,6 +90,7 @@ rule Token = parse
   | "||"                { Parser.OR     (getPos lexbuf) }
   | `(`                 { Parser.LPAR   (getPos lexbuf) }
   | `)`                 { Parser.RPAR   (getPos lexbuf) }
+  | "=>"                { Parser.IMPL   (getPos lexbuf) }
   | `[`                 { Parser.LBRACKET (getPos lexbuf) }
   | `]`                 { Parser.RBRACKET (getPos lexbuf) }
   | `{`                 { Parser.LCURLY (getPos lexbuf) }
