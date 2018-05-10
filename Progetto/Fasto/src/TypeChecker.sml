@@ -230,8 +230,18 @@ and checkExp ftab vtab (exp : In.Exp)
          end
                
     | In.Map (f, arr_exp, _, _, pos)
-      => raise Fail "Unimplemented feature map"
-               
+        => let val (array_type, arr_exp_dec) = checkExp ftab vtab arr_exp
+           in case array_type of
+                Array t =>
+                let val (f_name, ret_type, arg_types) = checkFunArg(f, vtab, ftab, pos)
+                    in if arg_types = [t]
+                    then (Array ret_type,
+                                Out.Map (f_name, arr_exp_dec, t, ret_type, pos))
+                    else raise Error ("Type error:" ^ ppType t ^ ppType ret_type, pos)
+                end
+                | _ => raise Error ("2nd argument should be an array:", pos)
+            end
+                
     | In.Reduce (f, n_exp, arr_exp, _, pos)
       => raise Fail "Unimplemented feature reduce"
 
